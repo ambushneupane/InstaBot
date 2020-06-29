@@ -36,22 +36,26 @@ class Instabot:
         next_not_now = wait.until(lambda notnow: notnow.find_element_by_xpath('//button[text()="Not Now"]'))
         next_not_now.click()  # it will click on second not now button
         print("Clicked Second Not now Button")
-        clickprofile = wait.until(
-            lambda a: a.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[3]/div/div[5]/a'))
-        clickprofile.click()  # it clicks our profile
+        sleep(3)
+        # clickprofile = wait.until(
+        #     lambda a: a.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[3]/div/div[5]/a'))
+        # clickprofile.click()  # it clicks our profile
+        clickprofile=wait.until(EC.element_to_be_clickable((By.XPATH,'//*[@id="react-root"]/section/nav/div[2]/div/div/div[3]/div/div[5]/a')))
+        clickprofile.click()
 
     def following(self):
+        wait=WebDriverWait(self.driver,15)
         action = ActionChains(self.driver)
         self.numoffollowing = int(wait.until(EC.presence_of_element_located((By.XPATH,
-                                                                             '//li/a[text()=" following"]/span'))).text)  # will give error if you have followed more than 999 persons cause after it comes 1k which python doesnot know how to convert it into int
+                                                                             '//li/a[text()=" following"]/span'))).text)
         following_list = wait.until(EC.element_to_be_clickable((By.XPATH, "//a[contains(@href,'/following')]")))
         following_list.click()  # IT clicks the following and gives window of following list
-        sleep(5)
-
-        fBody = self.driver.find_element_by_css_selector("div[class='isgrP']")
+        sleep(2)
+        fBody=wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"div[class='isgrP']")))
+        # fBody = self.driver.find_element_by_css_selector("div[class='isgrP']")
         scroll = 0
-        scrolling_times = self.numoffollowing / 4  # Assuming that every time it scrolls 4 accounts will load.This is not quite good way to do it though.Use your logic for scrolling
-        scroll_count = scrolling_times - 2  # giving five more scrolls to make sure it scolled to the bottom of the list
+        scrolling_times = self.numoffollowing / 4  # Assuming that every time it scrolls 4 accounts will load.Depends on the speed of the internet.This is not quite good way to do it though.Use your logic for scrolling
+        scroll_count = scrolling_times +5 # giving five more scrolls to make sure it scolled to the bottom of the list
         while scroll < scroll_count:
             self.driver.execute_script(
                 'arguments[0].scrollTop = arguments[0].scrollTop + arguments[0].offsetHeight;',
@@ -66,10 +70,10 @@ class Instabot:
         self.following_accounts_text = [account_name.text for account_name in self.links if
                                         account_name.text != '']  # It will keep the name of the accounts in the list
 
-        self.set_of_following_link = set()
+        self.set_of_following_accounts_link = set()
         for link in self.links:
             account_link = link.get_attribute("href")
-            self.set_of_following_link.add(account_link)  # It will add the link of the accounts in line 67
+            self.set_of_following_accounts_link.add(account_link)  # It will add the link of the accounts in line 67
 
         print("The accounts in the following list are ", self.following_accounts_text)
         # print(self.set_of_following_link) #Print the username of the accounts whom you have followed if you want
@@ -80,7 +84,7 @@ class Instabot:
     def followers(self):
         self.stroffollowers = (
             wait.until(EC.presence_of_element_located((By.XPATH,
-                                                       '//li/a[text()=" followers"]/span'))).text)  # Throws error if you are followed by more than 999 accounts
+                                                       '//li/a[text()=" followers"]/span'))).text)
         self.numoffollowers = int(self.stroffollowers)
         action = ActionChains(self.driver)
 
@@ -91,7 +95,7 @@ class Instabot:
         fBody = self.driver.find_element_by_css_selector("div[class='isgrP']")
         scrolling_times = (self.numoffollowers / 4)
         scroll = 0
-        scroll_count = scrolling_times - 3  # You can use your own logic to scroll down till the bottom
+        scroll_count = scrolling_times +3  # You can use your own logic to scroll down till the bottom
         while scroll < scroll_count:
             self.driver.execute_script(
                 'arguments[0].scrollTop = arguments[0].scrollTop + arguments[0].offsetHeight;',
@@ -122,32 +126,44 @@ class Instabot:
         print(f"{len(self.not_following_account)} haven't followed you back\n They are:-", self.not_following_account)
 
     def links_of_unfollowers(self):
-        self.unfollowers_link = [user_link for user_link in self.set_of_following_link if
-                                 user_link not in self.set_of_followers_accounts_link]
+        # self.unfollowers_link = [user_link for user_link in self.set_of_following_accounts_link if
+        #                          user_link not in self.set_of_followers_accounts_link]
+        self.unfollowers_link=self.set_of_following_accounts_link-self.set_of_followers_accounts_link
+
         self.num_of_unfollowers = len(self.unfollowers_link)
         print("Total Accounts that havenot followed you back are", self.num_of_unfollowers)
 
         print("Links of the account that haven't followed me are:", self.unfollowers_link)
 
     def unfollow_the_unfollowers(self):
+        wait=WebDriverWait(self.driver,10)
         driver = self.driver
         for persons in self.unfollowers_link:
             body = self.driver.find_element_by_tag_name("body")
             body.send_keys(Keys.CONTROL + 't')
-            sleep(5)
+            sleep(3)
             driver.get(persons)
-            sleep(2)
+            sleep(4)
 
-            def to_int(n): #this will convert the k,m to actual value (i.e 1000,1000000)
-                return int(float(n[:-1]) * (
-                    1_000 if n[-1] == "k" else 1_000_000 if n[-1] == "m" else 1_000_000_000 if n[-1] == "M" else 1))
+            followers_number = (wait.until(EC.presence_of_element_located((By.XPATH,'//li/a[text()=" followers"]/span'))).text)
 
-            checking_the_accounts_followers = (wait.until(EC.presence_of_element_located((By.XPATH,
-                                                                                          '//li/a[text()=" followers"]/span'))).text)
+            def remove(number):  # Ir will remove the delimiter
+                removing_dot = number.replace(".", "") #Removing . from famous accounts
+                removing_comma= removing_dot.replace(",", "")
+                return removing_comma
 
-            checking = to_int(checking_the_accounts_followers)
+            without_dilemiters = remove(str(followers_number))
 
-            if checking > 1000:  # I don't want to unfollow some famous account(assuming they have more than 1000 followers)
+            def to_int(n):  # this will convert the k,m to actual value (i.e 1000,1000000)
+                return int(float(n[:-1]) * int(
+                    1000 if n[-1] == "k" else 1000000 if n[-1] == "m" else 1000000000 if n[-1] == "b" else n))
+
+            actual_num_of_follwers = to_int(without_dilemiters)
+
+            total_followers=1000# I don't want to unfollow some famous account(assuming they have more than 1000 followers, Its your choice!!)
+
+            if actual_num_of_follwers > total_followers:
+               # print("This account has more than.{} followers,So it is as it was".format(total_followers))
                 pass
             else:
                 clicking_unfollow_button = self.driver.find_element_by_xpath(
@@ -157,10 +173,9 @@ class Instabot:
                 unfollow = self.driver.find_element_by_xpath("//button[@class='aOOlW -Cab_   ']")
                 unfollow.click()
                 # print("Unfollowed", persons)#in case if you want to know whom you unfollowed
-                sleep(3)
+                sleep(1)
 
-
-my_bot = Instabot("Username/Email", "Password")
+my_bot = Instabot("Username", "Password")
 my_bot.following()
 my_bot.followers()
 my_bot.unfollowers()
