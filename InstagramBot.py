@@ -46,8 +46,12 @@ class Instabot:
     def following(self):
         wait=WebDriverWait(self.driver,15)
         action = ActionChains(self.driver)
-        self.numoffollowing = int(wait.until(EC.presence_of_element_located((By.XPATH,
+        self.numoffollowinglocation = (wait.until(EC.presence_of_element_located((By.XPATH,
                                                                              '//li/a[text()=" following"]/span'))).text)
+        removing_comma=self.numoffollowinglocation.replace(",","")
+        removing_dot=removing_comma.replace(".","")
+        self.numoffollowing=int(removing_dot)
+
         following_list = wait.until(EC.element_to_be_clickable((By.XPATH, "//a[contains(@href,'/following')]")))
         following_list.click()  # IT clicks the following and gives window of following list
         sleep(2)
@@ -82,10 +86,14 @@ class Instabot:
         action.send_keys(Keys.RETURN).perform()
 
     def followers(self):
-        self.stroffollowers = (
+        self.numberoffollowerslocation = (
             wait.until(EC.presence_of_element_located((By.XPATH,
                                                        '//li/a[text()=" followers"]/span'))).text)
-        self.numoffollowers = int(self.stroffollowers)
+        removing_comma = self.numberoffollowerslocation.replace(",", "")
+        removing_dot = removing_comma.replace(".", "")
+        self.numoffollowers = int(removing_dot)
+
+
         action = ActionChains(self.driver)
 
         sleep(2)
@@ -175,7 +183,7 @@ class Instabot:
                 # print("Unfollowed", persons)#in case if you want to know whom you unfollowed
                 sleep(1)
 
-my_bot = Instabot("Username", "Password")
+my_bot = Instabot("Email/Username", "Password")
 my_bot.following()
 my_bot.followers()
 my_bot.unfollowers()
