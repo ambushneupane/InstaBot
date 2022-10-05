@@ -183,7 +183,7 @@ class Instabot:
                 # print("Unfollowed", persons)#in case if you want to know whom you unfollowed
                 sleep(1)
 
-my_bot = Instabot("Email/Username", "Password")
+my_bot = Instabot("Email/Username", "Password") #add your email and password here.
 my_bot.following()
 my_bot.followers()
 my_bot.unfollowers()
